@@ -106,8 +106,8 @@ def get_settings():
         'bot_token': os.getenv('BOT_TOKEN', ''),
         'notify_new_order': True,
         'notify_low_stock': True,
-        'welcome_message': 'Assalomu alaykum! Mahsulotlar katalogiga xush kelibsiz! 🛍️',
-        'contact_info': '📞 Bog\'lanish:\nTelefon: +998 90 123 45 67\nEmail: info@example.uz'
+        'welcome_message': 'Assalomu alaykum! Ishlar boshqarmasi  Mahsulotlar katalogiga xush kelibsiz! 🛍️',
+        'contact_info': '📞 Bog\'lanish:\nTelefon: +998 99 978 87 80\nEmail: fayziev978@mail.ru'
     }
     
     settings = load_data(SETTINGS_FILE, default_settings)
@@ -274,7 +274,7 @@ async def order_product(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data['ordering_product_id'] = product_id
     
     await query.edit_message_text(
-        "Buyurtma sababini yozing:\n(Masalan: O'zimga kerak, Do'stimga sovg'a, ish uchun va h.k.)",
+        "Buyurtma sababini yozing:\n(Masalan: Kimga qachon berilganligin asos bor yoqligini yozing!.)",
         reply_markup=InlineKeyboardMarkup([[
             InlineKeyboardButton("❌ Bekor qilish", callback_data=f"product_{product_id}")
         ]])
@@ -414,8 +414,8 @@ async def contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
     settings = get_settings()
     contact_info = settings.get('contact_info', 
         "📞 Bog'lanish uchun:\n"
-        "Telefon: +998901234567\n"
-        "Email: info@example.com"
+        "Telefon: +998999788780\n"
+        "Email: fayziev978@mail.ru"
     )
     
     await update.message.reply_text(contact_info)
