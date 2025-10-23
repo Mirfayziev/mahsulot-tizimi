@@ -37,7 +37,7 @@ def load_admin_ids():
     except Exception as e:
         logger.error(f"Admin IDs yuklashda xatolik: {e}")
     
-    admin_ids_str = os.getenv('ADMIN_IDS', '320977751')
+    admin_ids_str = os.getenv('ADMIN_IDS', '')
     if admin_ids_str:
         return [int(id.strip()) for id in admin_ids_str.split(',') if id.strip()]
     return []
