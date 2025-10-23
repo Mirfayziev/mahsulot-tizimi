@@ -24,8 +24,8 @@ wheels/
 *.egg
 
 # Bot data
-bot_data/
-web_data/
+#bot_data/
+#web_data/
 backup_*/
 
 # Environment variables
