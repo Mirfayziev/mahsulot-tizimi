@@ -1029,3 +1029,250 @@ function simulateTelegramOrders() {
 if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission();
 }
+
+// ===== SINXRONIZATSIYA FUNKSIYALARI =====
+
+// 1. Ma'lumotlarni export qilish (JSON)
+function exportAllData() {
+    const data = {
+        products: db.getProducts(),
+        categories: db.getCategories(),
+        orders: db.getOrders(),
+        settings: JSON.parse(localStorage.getItem('settings') || '{}'),
+        exportedAt: new Date().toISOString(),
+        version: '1.0.0'
+    };
+    
+    return data;
+}
+
+// 2. JSON faylni yuklab olish
+function downloadJSON() {
+    const data = exportAllData();
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `mahsulotlar_backup_${Date.now()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    
+    showNotification('Ma\'lumotlar yuklab olindi!', 'success');
+}
+
+// 3. Faqat bot uchun format (products, categories, orders)
+function downloadForBot() {
+    const data = {
+        products: db.getProducts(),
+        categories: db.getCategories(),
+        orders: db.getOrders()
+    };
+    
+    // Har bir fayl uchun alohida yuklab olish
+    ['products', 'categories', 'orders'].forEach(key => {
+        const json = JSON.stringify(data[key], null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${key}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+    });
+    
+    showNotification('Bot fayllari yuklab olindi! (products.json, categories.json, orders.json)', 'success');
+}
+
+// 4. Ma'lumotlarni import qilish
+function importData(jsonData) {
+    try {
+        const data = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
+        
+        if (data.products) {
+            localStorage.setItem('products', JSON.stringify(data.products));
+        }
+        if (data.categories) {
+            localStorage.setItem('categories', JSON.stringify(data.categories));
+        }
+        if (data.orders) {
+            localStorage.setItem('orders', JSON.stringify(data.orders));
+        }
+        if (data.settings) {
+            localStorage.setItem('settings', JSON.stringify(data.settings));
+        }
+        
+        showNotification('Ma\'lumotlar muvaffaqiyatli import qilindi!', 'success');
+        setTimeout(() => location.reload(), 1000);
+    } catch (error) {
+        showNotification('Import qilishda xatolik: ' + error.message, 'error');
+    }
+}
+
+// 5. Fayl tanlash dialog
+function selectFileForImport() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const jsonData = event.target.result;
+                if (confirm('Hozirgi ma\'lumotlar almashtiriladi. Davom etasizmi?')) {
+                    importData(jsonData);
+                }
+            } catch (error) {
+                showNotification('Faylni o\'qishda xatolik!', 'error');
+            }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+}
+
+// 6. GitHub'ga qo'llash uchun instruction
+function showGitHubInstructions() {
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>📤 Bot'ga Sinxronlash</h2>
+                <button class="btn-icon" onclick="this.closest('.modal').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="instruction-steps">
+                    <h3>Qadamlar:</h3>
+                    
+                    <div class="step">
+                        <strong>1. Fayllarni yuklab oling:</strong>
+                        <button class="btn btn-primary" onclick="downloadForBot(); setTimeout(() => this.textContent = '✅ Yuklab olindi!', 500);">
+                            <i class="fas fa-download"></i> Bot Fayllarini Yuklab Olish
+                        </button>
+                    </div>
+                    
+                    <div class="step">
+                        <strong>2. GitHub'ga o'ting:</strong>
+                        <a href="https://github.com/Mirfayziev/mahsulot-tizimi" target="_blank" class="btn btn-secondary">
+                            <i class="fab fa-github"></i> GitHub Repository
+                        </a>
+                    </div>
+                    
+                    <div class="step">
+                        <strong>3. bot_data/ papkasiga yuklang:</strong>
+                        <ul style="text-align: left; margin-top: 10px;">
+                            <li>Repository'da: <code>bot_data/</code> papkasiga o'ting</li>
+                            <li>Har bir faylni alohida upload qiling:</li>
+                            <li style="margin-left: 20px;">• <code>products.json</code></li>
+                            <li style="margin-left: 20px;">• <code>categories.json</code></li>
+                            <li style="margin-left: 20px;">• <code>orders.json</code></li>
+                            <li>Commit changes</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="step">
+                        <strong>4. Render avtomatik yangilanadi!</strong>
+                        <p style="margin: 10px 0;">1-2 daqiqa ichida bot yangi ma'lumotlarni ko'radi.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Yopish</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// 7. Bot'dan import qilish instruction
+function showBotImportInstructions() {
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>📥 Bot'dan Import Qilish</h2>
+                <button class="btn-icon" onclick="this.closest('.modal').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="instruction-steps">
+                    <h3>Qadamlar:</h3>
+                    
+                    <div class="step">
+                        <strong>1. GitHub'dan fayllarni yuklab oling:</strong>
+                        <ul style="text-align: left; margin-top: 10px;">
+                            <li>Repository: <a href="https://github.com/Mirfayziev/mahsulot-tizimi/tree/main/bot_data" target="_blank">bot_data/</a></li>
+                            <li><code>products.json</code> → Raw → Save as</li>
+                            <li><code>categories.json</code> → Raw → Save as</li>
+                            <li><code>orders.json</code> → Raw → Save as</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="step">
+                        <strong>2. Birlashtirilgan fayl yarating:</strong>
+                        <p style="margin: 10px 0;">Barcha 3 faylni bitta JSON'ga birlashtiring:</p>
+                        <pre style="background: #f5f5f5; padding: 10px; border-radius: 5px; text-align: left; font-size: 12px;">
+{
+  "products": [...], 
+  "categories": [...],
+  "orders": [...]
+}</pre>
+                    </div>
+                    
+                    <div class="step">
+                        <strong>3. Import qiling:</strong>
+                        <button class="btn btn-primary" onclick="selectFileForImport(); this.closest('.modal').remove();">
+                            <i class="fas fa-upload"></i> Fayl Tanlash va Import
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Yopish</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// Sahifa yuklanganda sinxronizatsiya tugmalarini qo'shish
+window.addEventListener('DOMContentLoaded', () => {
+    // Header'ga sinxronizatsiya tugmalari qo'shish
+    const headerRight = document.querySelector('.header-right');
+    if (headerRight) {
+        // Export tugmasi
+        const exportBtn = document.createElement('button');
+        exportBtn.className = 'btn btn-secondary btn-small';
+        exportBtn.innerHTML = '<i class="fas fa-upload"></i> Bot\'ga Yuborish';
+        exportBtn.onclick = showGitHubInstructions;
+        exportBtn.title = 'Web saytdan bot\'ga sinxronlash';
+        exportBtn.style.marginRight = '10px';
+        headerRight.insertBefore(exportBtn, headerRight.firstChild);
+        
+        // Import tugmasi
+        const importBtn = document.createElement('button');
+        importBtn.className = 'btn btn-secondary btn-small';
+        importBtn.innerHTML = '<i class="fas fa-download"></i> Bot\'dan Olish';
+        importBtn.onclick = showBotImportInstructions;
+        importBtn.title = 'Bot\'dan web saytga sinxronlash';
+        importBtn.style.marginRight = '10px';
+        headerRight.insertBefore(importBtn, headerRight.firstChild);
+        
+        // Backup tugmasi
+        const backupBtn = document.createElement('button');
+        backupBtn.className = 'btn btn-secondary btn-small';
+        backupBtn.innerHTML = '<i class="fas fa-save"></i> Backup';
+        backupBtn.onclick = downloadJSON;
+        backupBtn.title = 'Barcha ma\'lumotlarni saqlash';
+        backupBtn.style.marginRight = '10px';
+        headerRight.insertBefore(backupBtn, headerRight.firstChild);
+    }
+});
