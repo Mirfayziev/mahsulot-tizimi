@@ -1,9 +1,30 @@
 [
   {
+    "id": 1,
+    "name": "Elektronika",
+    "description": "Elektronik mahsulotlar",
+    "icon": "💻",
+    "createdAt": "2025-10-27T00:00:00.000Z"
+  },
+  {
+    "id": 2,
+    "name": "Kiyimlar",
+    "description": "Kiyim-kechak",
+    "icon": "👕",
+    "createdAt": "2025-10-27T00:00:00.000Z"
+  },
+  {
+    "id": 3,
+    "name": "Oziq-ovqat",
+    "description": "Oziq-ovqat mahsulotlari",
+    "icon": "🍕",
+    "createdAt": "2025-10-27T00:00:00.000Z"
+  },
+  {
     "id": 4,
     "name": "Kitoblar",
     "description": "Kitoblar va nashrlar",
     "icon": "📚",
-    "createdAt": "2025-10-23T11:50:17.890Z"
+    "createdAt": "2025-10-27T00:00:00.000Z"
   }
 ]
